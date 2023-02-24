@@ -23,10 +23,10 @@ export class StatusController {
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
-    const { status_name } = request.body;
+    const { statusName } = request.body;
 
     const user = Object.assign(new Status(), {
-      status_name,
+      statusName,
     });
 
     return this.statusRepository.save(user);

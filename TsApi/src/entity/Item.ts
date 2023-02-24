@@ -5,6 +5,9 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  Tree,
+  TreeChildren,
+  TreeParent,
 } from "typeorm";
 import { Asset } from "./Asset";
 import { Category } from "./Category";
@@ -13,19 +16,37 @@ import { Release } from "./Release";
 import { Status } from "./Status";
 import { Transaction } from "./Transaction";
 
-@Entity()
+@Entity("item")
 export class Item {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: "varchar", length: 50, unique: true })
-  item_code: string;
+  @Column({
+    name: "item_code",
+    type: "varchar",
+    length: 50,
+    unique: true,
+    nullable: false,
+  })
+  itemCode: string;
 
-  @Column({ type: "varchar", length: 50, unique: true })
-  game_code: string;
+  @Column({
+    name: "game_code",
+    type: "varchar",
+    length: 50,
+    unique: true,
+    nullable: false,
+  })
+  gameCode: string;
 
-  @Column({ type: "varchar", length: 50, unique: true })
-  item_name: string;
+  @Column({
+    name: "item_name",
+    type: "varchar",
+    length: 50,
+    unique: true,
+    nullable: false,
+  })
+  itemName: string;
 
   @ManyToOne(() => Category, (category) => category.items)
   @JoinColumn({
@@ -33,7 +54,7 @@ export class Item {
     referencedColumnName: "id",
     foreignKeyConstraintName: "fk_cat_id",
   })
-  category: Category;
+  categoryId: Category;
 
   @ManyToOne(() => Status, (status) => status.items)
   @JoinColumn({
@@ -41,7 +62,7 @@ export class Item {
     referencedColumnName: "id",
     foreignKeyConstraintName: "fk_stat_id",
   })
-  status: Status;
+  statusId: Status;
 
   @ManyToOne(() => Contract, (contract) => contract.items)
   @JoinColumn({
@@ -49,25 +70,24 @@ export class Item {
     referencedColumnName: "id",
     foreignKeyConstraintName: "fk_cont_id",
   })
-  contract: Contract;
+  contractId: Contract;
 
-  @ManyToOne(() => Item, (item) => item.children)
+  @TreeParent()
   @JoinColumn({
     name: "parent_id",
     referencedColumnName: "id",
-    foreignKeyConstraintName: "fk_item_id",
   })
-  parent: Item;
+  parentId: Item;
 
-  @OneToMany(() => Item, (item) => item.parent)
+  @TreeChildren()
   children: Item[];
 
-  @OneToMany(() => Asset, (asset) => asset.item)
+  @OneToMany(() => Asset, (asset) => asset.itemId)
   assets: Asset[];
 
-  @OneToMany(() => Release, (release) => release.item)
+  @OneToMany(() => Release, (release) => release.itemId)
   releases: Release[];
 
-  @OneToMany(() => Transaction, (transaction) => transaction.item)
+  @OneToMany(() => Transaction, (transaction) => transaction.itemId)
   transactions: Transaction[];
 }

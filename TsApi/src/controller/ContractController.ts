@@ -23,10 +23,10 @@ export class ContractController {
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
-    const { contract_address } = request.body;
+    const { contractAddress } = request.body;
 
     const contract = Object.assign(new Contract(), {
-      contract_address,
+      contractAddress,
     });
 
     return this.contractRepository.save(contract);

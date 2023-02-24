@@ -6,9 +6,9 @@ export class TransactionType {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: "transaction_name", nullable: false, unique: true })
   transactionName: string;
 
-  @OneToMany(() => Transaction, (transaction) => transaction.transactionType)
+  @OneToMany(() => Transaction, (transaction) => transaction.typeId)
   transactions: Transaction[];
 }

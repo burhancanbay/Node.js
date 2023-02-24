@@ -6,9 +6,9 @@ export class Contract {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  contract_address: string;
+  @Column({ name: "contract_address", unique: true, nullable: false })
+  contractAddress: string;
 
-  @OneToMany(() => Item, (item) => item.contract)
+  @OneToMany(() => Item, (item) => item.contractId)
   items: Item[];
 }

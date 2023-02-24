@@ -9,6 +9,19 @@ export class UserController {
     return this.userRepository.find();
   }
 
+  // async oneName(request: Request, response: Response, next: NextFunction) {
+  //   const name = request.params.name;
+
+  //   const user = await this.userRepository.findOneBy({
+  //     userName: name,
+  //   });
+
+  //   if (!user) {
+  //     return "unregistered user";
+  //   }
+  //   return user;
+  // }
+
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
 
@@ -36,26 +49,28 @@ export class UserController {
   async update(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
 
-    const userToUpdate = await this.userRepository.findOneBy({ id });
+    const updatedUser = await this.userRepository.findOneBy({ id });
 
-    if (!userToUpdate) {
+    if (!updatedUser) {
       return "this user not exist";
     }
 
-    this.userRepository.merge(userToUpdate, request.body);
-
-    return await this.userRepository.save(userToUpdate);
+    this.userRepository.merge(updatedUser, request.body);
+    let message = "user has been updated";
+    await this.userRepository.save(updatedUser);
+    return response.status(200).json({ message, updatedUser });
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
 
-    let userToRemove = await this.userRepository.findOneBy({ id });
+    let removedUser = await this.userRepository.findOneBy({ id });
 
-    if (!userToRemove) {
+    if (!removedUser) {
       return "this user not exist";
     }
-
-    return await this.userRepository.remove(userToRemove);
+    let message = "user has been removed";
+    await this.userRepository.remove(removedUser);
+    return response.status(200).json({ message, removedUser });
   }
 }

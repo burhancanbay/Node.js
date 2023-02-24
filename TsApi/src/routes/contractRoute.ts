@@ -4,31 +4,31 @@ import { RouteType } from "./types";
 const routes: RouteType[] = [
   {
     method: "get",
-    route: "/contract",
+    route: "/contracts",
     controller: ContractController,
     action: "all",
   },
   {
     method: "get",
-    route: "/contract/:id",
+    route: "/contracts/:id",
     controller: ContractController,
     action: "one",
   },
   {
     method: "post",
-    route: "/contract",
+    route: "/contracts",
     controller: ContractController,
     action: "save",
   },
   {
     method: "put",
-    route: "/contract/:id",
+    route: "/contracts/:id",
     controller: ContractController,
     action: "update",
   },
   {
     method: "delete",
-    route: "/contract/:id",
+    route: "/contracts/:id",
     controller: ContractController,
     action: "remove",
   },

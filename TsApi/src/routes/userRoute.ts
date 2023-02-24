@@ -15,6 +15,12 @@ const routes: RouteType[] = [
     action: "one",
   },
   {
+    method: "get",
+    route: "/users/:name",
+    controller: UserController,
+    action: "oneName",
+  },
+  {
     method: "post",
     route: "/users",
     controller: UserController,

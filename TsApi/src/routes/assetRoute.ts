@@ -10,6 +10,24 @@ const routes: RouteType[] = [
   },
   {
     method: "get",
+    route: "/assets/user/:userId/item/:itemId",
+    controller: AssetController,
+    action: "one",
+  },
+  {
+    method: "get",
+    route: "/assets/item/:itemId",
+    controller: AssetController,
+    action: "one",
+  },
+  {
+    method: "get",
+    route: "/assets/user/:userId",
+    controller: AssetController,
+    action: "one",
+  },
+  {
+    method: "get",
     route: "/assets/:id",
     controller: AssetController,
     action: "one",

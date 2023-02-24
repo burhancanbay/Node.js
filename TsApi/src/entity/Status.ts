@@ -6,9 +6,9 @@ export class Status {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  status_name: string;
+  @Column({ name: "status_name", nullable: false, unique: true })
+  statusName: string;
 
-  @OneToMany(() => Item, (item) => item.status)
+  @OneToMany(() => Item, (item) => item.statusId)
   items: Item[];
 }

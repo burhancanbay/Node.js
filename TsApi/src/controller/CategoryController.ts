@@ -23,10 +23,10 @@ export class CategoryController {
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
-    const { category_name } = request.body;
+    const { categoryName } = request.body;
 
     const category = Object.assign(new Category(), {
-      category_name,
+      categoryName,
     });
 
     return this.categoryRepository.save(category);
