@@ -1,9 +1,14 @@
 import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entity/User";
+import { QueryFailedError, Unique } from "typeorm";
 
 export class UserController {
-  private userRepository = AppDataSource.getRepository(User);
+  private _userRepository = AppDataSource.getRepository(User);
+
+  public get userRepository() {
+    return this._userRepository;
+  }
 
   async all(request: Request, response: Response, next: NextFunction) {
     return this.userRepository.find();
@@ -24,6 +29,10 @@ export class UserController {
 
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     const user = await this.userRepository.findOne({
       where: { id },
@@ -49,6 +58,10 @@ export class UserController {
   async update(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
 
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
+
     const updatedUser = await this.userRepository.findOneBy({ id });
 
     if (!updatedUser) {
@@ -56,21 +69,23 @@ export class UserController {
     }
 
     this.userRepository.merge(updatedUser, request.body);
-    let message = "user has been updated";
-    await this.userRepository.save(updatedUser);
-    return response.status(200).json({ message, updatedUser });
+
+    return await this.userRepository.save(updatedUser);
   }
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     let removedUser = await this.userRepository.findOneBy({ id });
 
     if (!removedUser) {
       return "this user not exist";
     }
-    let message = "user has been removed";
-    await this.userRepository.remove(removedUser);
-    return response.status(200).json({ message, removedUser });
+
+    return await this.userRepository.remove(removedUser);
   }
 }

@@ -3,7 +3,11 @@ import { NextFunction, Request, Response } from "express";
 import { Contract } from "../entity/Contract";
 
 export class ContractController {
-  private contractRepository = AppDataSource.getRepository(Contract);
+  private _contractRepository = AppDataSource.getRepository(Contract);
+
+  public get contractRepository() {
+    return this._contractRepository;
+  }
 
   async all(request: Request, response: Response, next: NextFunction) {
     return this.contractRepository.find();
@@ -11,6 +15,9 @@ export class ContractController {
 
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     const contract = await this.contractRepository.findOne({
       where: { id },
@@ -34,6 +41,9 @@ export class ContractController {
 
   async update(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     let contractToUpdate = await this.contractRepository.findOneBy({ id });
 
@@ -48,6 +58,9 @@ export class ContractController {
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     let contractToRemove = await this.contractRepository.findOneBy({ id });
 

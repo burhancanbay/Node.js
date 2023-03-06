@@ -1,13 +1,10 @@
 import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
+import { User } from "../entity/User";
 import { Category } from "../entity/Category";
 
 export class CategoryController {
-  private _categoryRepository = AppDataSource.getRepository(Category);
-
-  public get categoryRepository() {
-    return this._categoryRepository;
-  }
+  private categoryRepository = AppDataSource.getRepository(Category);
 
   async all(request: Request, response: Response, next: NextFunction) {
     return this.categoryRepository.find();
@@ -15,9 +12,6 @@ export class CategoryController {
 
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
-    }
 
     const category = await this.categoryRepository.findOne({
       where: { id },
@@ -29,21 +23,8 @@ export class CategoryController {
     return category;
   }
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const { categoryName } = request.body;
-
-    const category = Object.assign(new Category(), {
-      categoryName,
-    });
-
-    return this.categoryRepository.save(category);
-  }
-
   async update(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
-    }
 
     let categoryToUpdate = await this.categoryRepository.findOneBy({ id });
 
@@ -56,11 +37,18 @@ export class CategoryController {
     return await this.categoryRepository.save(categoryToUpdate);
   }
 
+  async save(request: Request, response: Response, next: NextFunction) {
+    const { categoryName } = request.body;
+
+    const category = Object.assign(new Category(), {
+      categoryName,
+    });
+
+    return this.categoryRepository.save(category);
+  }
+
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
-    }
 
     let categoryToRemove = await this.categoryRepository.findOneBy({ id });
 
@@ -68,6 +56,8 @@ export class CategoryController {
       return "this category not exist";
     }
 
-    return await this.categoryRepository.remove(categoryToRemove);
+    await this.categoryRepository.remove(categoryToRemove);
+
+    return "category has been removed";
   }
 }

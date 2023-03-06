@@ -4,8 +4,12 @@ import { NextFunction, Request, Response } from "express";
 import { TransactionType } from "../entity/TransactionType";
 
 export class TransactionTypeController {
-  private transactionTypeRepository =
+  private _transactionTypeRepository =
     AppDataSource.getRepository(TransactionType);
+
+  public get transactionTypeRepository() {
+    return this._transactionTypeRepository;
+  }
 
   async all(request: Request, response: Response, next: NextFunction) {
     return this.transactionTypeRepository.find();
@@ -13,6 +17,9 @@ export class TransactionTypeController {
 
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     const transactionType = await this.transactionTypeRepository.findOne({
       where: { id },
@@ -37,6 +44,10 @@ export class TransactionTypeController {
   async update(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
 
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
+
     let transactionTypeToUpdate =
       await this.transactionTypeRepository.findOneBy({ id });
 
@@ -51,6 +62,10 @@ export class TransactionTypeController {
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     let transactionTypeToRemove =
       await this.transactionTypeRepository.findOneBy({ id });

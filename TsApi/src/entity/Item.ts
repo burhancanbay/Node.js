@@ -8,6 +8,8 @@ import {
   Tree,
   TreeChildren,
   TreeParent,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import { Asset } from "./Asset";
 import { Category } from "./Category";
@@ -46,48 +48,63 @@ export class Item {
     unique: true,
     nullable: false,
   })
-  itemName: string;
+  name: string;
 
-  @ManyToOne(() => Category, (category) => category.items)
+  @ManyToOne(() => Category, (category) => category.items, { nullable: false })
   @JoinColumn({
     name: "category_id",
     referencedColumnName: "id",
     foreignKeyConstraintName: "fk_cat_id",
   })
-  categoryId: Category;
+  category: Category;
 
-  @ManyToOne(() => Status, (status) => status.items)
+  @ManyToOne(() => Status, (status) => status.items, { nullable: false })
   @JoinColumn({
     name: "status_id",
     referencedColumnName: "id",
     foreignKeyConstraintName: "fk_stat_id",
   })
-  statusId: Status;
+  status: Status;
 
-  @ManyToOne(() => Contract, (contract) => contract.items)
+  @ManyToOne(() => Contract, (contract) => contract.items, { nullable: false })
   @JoinColumn({
     name: "contract_id",
     referencedColumnName: "id",
     foreignKeyConstraintName: "fk_cont_id",
   })
-  contractId: Contract;
+  contract: Contract;
 
   @TreeParent()
   @JoinColumn({
     name: "parent_id",
     referencedColumnName: "id",
+    foreignKeyConstraintName: "fk_par_id",
   })
-  parentId: Item;
+  parent: Item;
 
   @TreeChildren()
   children: Item[];
 
-  @OneToMany(() => Asset, (asset) => asset.itemId)
+  @OneToMany(() => Asset, (asset) => asset.item)
   assets: Asset[];
 
-  @OneToMany(() => Release, (release) => release.itemId)
+  @OneToMany(() => Release, (release) => release.item)
   releases: Release[];
 
-  @OneToMany(() => Transaction, (transaction) => transaction.itemId)
+  @OneToMany(() => Transaction, (transaction) => transaction.item)
   transactions: Transaction[];
+
+  @CreateDateColumn({
+    default: () => "CURRENT_TIMESTAMP",
+    nullable: false,
+    name: "created_at",
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    default: () => "CURRENT_TIMESTAMP",
+    nullable: false,
+    name: "updated_at",
+  })
+  updatedAt: Date;
 }

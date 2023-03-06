@@ -2,30 +2,40 @@ import { AppDataSource } from "../data-source";
 
 import { NextFunction, Request, Response } from "express";
 import { Item } from "../entity/Item";
-import { Category } from "../entity/Category";
-import { Contract } from "../entity/Contract";
-import { Status } from "../entity/Status";
+import { CategoryController } from "./CategoryController";
+import { ContractController } from "./ContractController";
+import { StatusController } from "./StatusController";
 
 export class ItemController {
-  private itemRepository = AppDataSource.getRepository(Item);
-  private categoryRepository = AppDataSource.getRepository(Category);
-  private contractRepository = AppDataSource.getRepository(Contract);
-  private statusRepository = AppDataSource.getRepository(Status);
+  private _itemRepository = AppDataSource.getRepository(Item);
 
+  public get itemRepository() {
+    return this._itemRepository;
+  }
   async all(request: Request, response: Response, next: NextFunction) {
-    return this.itemRepository.find();
+    return this.itemRepository.find({
+      relations: {
+        category: true,
+        contract: true,
+        status: true,
+        parent: true,
+      },
+    });
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     const item = await this.itemRepository.findOne({
       where: { id },
       relations: {
-        categoryId: true,
-        contractId: true,
-        statusId: true,
-        parentId: true,
+        category: true,
+        contract: true,
+        status: true,
+        parent: true,
       },
     });
 
@@ -36,41 +46,50 @@ export class ItemController {
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
-    const {
-      itemCode,
-      gameCode,
-      itemName,
-      parentId,
-      categoryId,
-      statusId,
-      contractId,
-    } = request.body;
+    let statusController = new StatusController();
+    let categoryController = new CategoryController();
+    let contractController = new ContractController();
 
-    const status = await this.statusRepository.findOne({
-      where: { id: statusId },
+    const { itemCode, gameCode, itemName, parent, category, status, contract } =
+      request.body;
+
+    if (!Number.isInteger(status)) {
+      return `${status} is not an integer`;
+    }
+    const _status = await statusController.statusRepository.findOne({
+      where: { id: status },
     });
-
-    if (!status) {
+    if (!_status) {
       return "unregistered status";
     }
-    const category = await this.categoryRepository.findOne({
-      where: { id: categoryId },
-    });
 
-    if (!category) {
+    if (!Number.isInteger(category)) {
+      return `${category} is not an integer`;
+    }
+
+    const _category = await categoryController.categoryRepository.findOne({
+      where: { id: category },
+    });
+    if (!_category) {
       return "unregistered category";
     }
-    const contract = await this.contractRepository.findOne({
-      where: { id: contractId },
-    });
 
-    if (!contract) {
+    if (!Number.isInteger(contract)) {
+      return `${contract} is not an integer`;
+    }
+    const _contract = await contractController.contractRepository.findOne({
+      where: { id: contract },
+    });
+    if (!_contract) {
       return "unregistered contract";
     }
-    const parentItem = await this.itemRepository.findOne({
-      where: { id: parentId },
-    });
 
+    if (!Number.isInteger(parent)) {
+      return `${parent} is not an integer`;
+    }
+    const parentItem = await this.itemRepository.findOne({
+      where: { id: parent },
+    });
     if (!parentItem) {
       return "unregistered parent item";
     }
@@ -78,52 +97,63 @@ export class ItemController {
       itemCode,
       gameCode,
       itemName,
-      parentId,
-      categoryId,
-      statusId,
-      contractId,
+      parent,
+      category,
+      status,
+      contract,
     });
 
     return this.itemRepository.save(item);
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
+    let statusController = new StatusController();
+    let categoryController = new CategoryController();
+    let contractController = new ContractController();
     const id = parseInt(request.params.id);
-    const {
-      itemCode,
-      gameCode,
-      itemName,
-      parentId,
-      categoryId,
-      statusId,
-      contractId,
-    } = request.body;
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
-    const status = await this.statusRepository.findOne({
-      where: { id: statusId },
+    const { itemCode, gameCode, itemName, parent, category, status, contract } =
+      request.body;
+
+    if (!Number.isInteger(status)) {
+      return `${status} is not an integer`;
+    }
+    const _status = await statusController.statusRepository.findOne({
+      where: { id: status },
     });
-
-    if (!status) {
+    if (!_status) {
       return "unregistered status";
     }
-    const category = await this.categoryRepository.findOne({
-      where: { id: categoryId },
-    });
 
-    if (!category) {
+    if (!Number.isInteger(category)) {
+      return `${category} is not an integer`;
+    }
+    const _category = await categoryController.categoryRepository.findOne({
+      where: { id: category },
+    });
+    if (!_category) {
       return "unregistered category";
     }
-    const contract = await this.contractRepository.findOne({
-      where: { id: contractId },
-    });
 
-    if (!contract) {
+    if (!Number.isInteger(contract)) {
+      return `${contract} is not an integer`;
+    }
+    const _contract = await contractController.contractRepository.findOne({
+      where: { id: contract },
+    });
+    if (!_contract) {
       return "unregistered contract";
     }
-    const parentItem = await this.itemRepository.findOne({
-      where: { id: parentId },
-    });
 
+    if (!Number.isInteger(parent)) {
+      return `${parent} is not an integer`;
+    }
+    const parentItem = await this.itemRepository.findOne({
+      where: { id: parent },
+    });
     if (!parentItem) {
       return "unregistered parent item";
     }
@@ -141,6 +171,9 @@ export class ItemController {
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     let itemToRemove = await this.itemRepository.findOneBy({ id });
 

@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import { Item } from "./Item";
 
 @Entity()
@@ -7,8 +14,22 @@ export class Status {
   id: number;
 
   @Column({ name: "status_name", nullable: false, unique: true })
-  statusName: string;
+  name: string;
 
-  @OneToMany(() => Item, (item) => item.statusId)
+  @CreateDateColumn({
+    default: () => "CURRENT_TIMESTAMP",
+    nullable: false,
+    name: "created_at",
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    default: () => "CURRENT_TIMESTAMP",
+    nullable: false,
+    name: "updated_at",
+  })
+  updatedAt: Date;
+
+  @OneToMany(() => Item, (item) => item.status)
   items: Item[];
 }

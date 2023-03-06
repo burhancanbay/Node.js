@@ -5,28 +5,37 @@ import { Item } from "../entity/Item";
 import { User } from "../entity/User";
 import { TransactionType } from "../entity/TransactionType";
 import { Transaction } from "../entity/Transaction";
+import { UserController } from "./UserController";
+import { ItemController } from "./ItemController";
+import { TransactionTypeController } from "./TransactionTypeController";
 
 export class TransactionController {
   private transactionRepository = AppDataSource.getRepository(Transaction);
-  private itemRepository = AppDataSource.getRepository(Item);
-  private userRepository = AppDataSource.getRepository(User);
-  private transactionTypeRepository =
-    AppDataSource.getRepository(TransactionType);
 
   async all(request: Request, response: Response, next: NextFunction) {
-    return this.transactionRepository.find();
+    return this.transactionRepository.find({
+      relations: {
+        fromUser: true,
+        toUser: true,
+        item: true,
+        type: true,
+      },
+    });
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     const transaction = await this.transactionRepository.findOne({
       where: { id },
       relations: {
-        fromUserId: true,
-        toUserId: true,
-        itemId: true,
-        typeId: true,
+        fromUser: true,
+        toUser: true,
+        item: true,
+        type: true,
       },
     });
 
@@ -37,40 +46,50 @@ export class TransactionController {
   }
 
   async save(request: Request, response: Response, next: NextFunction) {
-    const {
-      transactionDate,
-      transactionQty,
-      fromUserId,
-      toUserId,
-      itemId,
-      typeId,
-    } = request.body;
+    let userController = new UserController();
+    let itemController = new ItemController();
+    let transactionTypeController = new TransactionTypeController();
 
-    const fromUser = await this.userRepository.findOne({
-      where: { id: fromUserId },
+    const { transactionDate, transactionQty, fromUser, toUser, item, type } =
+      request.body;
+
+    if (!Number.isInteger(fromUser)) {
+      return `${fromUser} is not an integer`;
+    }
+    const from_user = await userController.userRepository.findOne({
+      where: { id: fromUser },
     });
-
-    if (!fromUser) {
+    if (!from_user) {
       return "unregistered user";
     }
-    const toUser = await this.userRepository.findOne({
-      where: { id: toUserId },
-    });
 
-    if (!toUserId) {
+    if (!Number.isInteger(toUser)) {
+      return `${toUser} is not an integer`;
+    }
+    const to_user = await userController.userRepository.findOne({
+      where: { id: toUser },
+    });
+    if (!to_user) {
       return "unregistered user";
     }
-    const item = await this.itemRepository.findOne({
-      where: { id: itemId },
-    });
 
-    if (!item) {
+    if (!Number.isInteger(item)) {
+      return `${item} is not an integer`;
+    }
+    const _item = await itemController.itemRepository.findOne({
+      where: { id: item },
+    });
+    if (!_item) {
       return "unregistered item";
     }
-    const transactionType = await this.transactionTypeRepository.findOne({
-      where: { id: typeId },
-    });
 
+    if (!Number.isInteger(type)) {
+      return `${type} is not an integer`;
+    }
+    const transactionType =
+      await transactionTypeController.transactionTypeRepository.findOne({
+        where: { id: type },
+      });
     if (!transactionType) {
       return "unregistered transaction type";
     }
@@ -78,58 +97,71 @@ export class TransactionController {
     const transaction = Object.assign(new Transaction(), {
       transactionDate,
       transactionQty,
-      fromUserId,
-      toUserId,
-      itemId,
-      typeId,
+      fromUser,
+      toUser,
+      item,
+      type,
     });
 
     return this.transactionRepository.save(transaction);
   }
 
   async update(request: Request, response: Response, next: NextFunction) {
+    let userController = new UserController();
+    let itemController = new ItemController();
+    let transactionTypeController = new TransactionTypeController();
+
     const id = parseInt(request.params.id);
-    const {
-      transactionDate,
-      transactionQty,
-      fromUserId,
-      toUserId,
-      itemId,
-      typeId,
-    } = request.body;
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
+    const { transactionDate, transactionQty, fromUser, toUser, item, type } =
+      request.body;
 
     let transactionToUpdate = await this.transactionRepository.findOneBy({
       id,
     });
-
     if (!transactionToUpdate) {
       return "this transaction not exist";
     }
-    const fromUser = await this.userRepository.findOne({
-      where: { id: fromUserId },
-    });
 
-    if (!fromUser) {
+    if (!Number.isInteger(fromUser)) {
+      return `${fromUser} is not an integer`;
+    }
+    const from_user = await userController.userRepository.findOne({
+      where: { id: fromUser },
+    });
+    if (!from_user) {
       return "unregistered user";
     }
-    const toUser = await this.userRepository.findOne({
-      where: { id: toUserId },
-    });
 
-    if (!toUserId) {
+    if (!Number.isInteger(toUser)) {
+      return `${toUser} is not an integer`;
+    }
+    const to_ser = await userController.userRepository.findOne({
+      where: { id: toUser },
+    });
+    if (!to_ser) {
       return "unregistered user";
     }
-    const item = await this.itemRepository.findOne({
-      where: { id: itemId },
-    });
 
-    if (!item) {
+    if (!Number.isInteger(item)) {
+      return `${item} is not an integer`;
+    }
+    const _item = await itemController.itemRepository.findOne({
+      where: { id: item },
+    });
+    if (!_item) {
       return "unregistered item";
     }
-    const transactionType = await this.transactionTypeRepository.findOne({
-      where: { id: typeId },
-    });
 
+    if (!Number.isInteger(type)) {
+      return `${type} is not an integer`;
+    }
+    const transactionType =
+      await transactionTypeController.transactionTypeRepository.findOne({
+        where: { id: type },
+      });
     if (!transactionType) {
       return "unregistered transaction type";
     }
@@ -141,6 +173,10 @@ export class TransactionController {
 
   async remove(request: Request, response: Response, next: NextFunction) {
     const id = parseInt(request.params.id);
+
+    if (!Number.isInteger(id)) {
+      return "please enter an integer parameter";
+    }
 
     let transactionToRemove = await this.transactionRepository.findOneBy({
       id,

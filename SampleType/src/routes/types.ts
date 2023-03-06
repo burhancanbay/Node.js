@@ -1,12 +1,15 @@
-export type MethodType = "get" | "post" | "put" | "delete" | "create";
+export type MethodType =
+  | "get"
+  | "post"
+  | "put"
+  | "delete"
+  | "create"
+  | "update";
 // const actions = ["all", "one", "save", "remove", "update"] as const;
 // export type ActionType = typeof actions[number];
 export type ActionType =
   | "all"
-  | "all1"
-  | "all2"
   | "one"
-  | "oneName"
   | "save"
   | "update"
   | "remove"

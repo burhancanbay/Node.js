@@ -18,13 +18,13 @@ const routes: RouteType[] = [
     method: "get",
     route: "/assets/item/:itemId",
     controller: AssetController,
-    action: "one",
+    action: "all2",
   },
   {
     method: "get",
     route: "/assets/user/:userId",
     controller: AssetController,
-    action: "one",
+    action: "all1",
   },
   {
     method: "get",

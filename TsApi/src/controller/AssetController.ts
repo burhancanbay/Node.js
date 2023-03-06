@@ -8,26 +8,51 @@ export class AssetController {
   async all(request: Request, response: Response, next: NextFunction) {
     return this.assetRepository.find({
       relations: {
-        userId: true,
-        itemId: true,
+        user: true,
+        item: true,
       },
     });
   }
 
-  async one(request: Request, response: Response, next: NextFunction) {
+  async all1(request: Request, response: Response, next: NextFunction) {
     const userId = parseInt(request.params.userId);
-    const itemId = parseInt(request.params.itemId);
 
-    const asset = await this.assetRepository.findOne({
+    if (!Number.isInteger(userId)) {
+      return `userId should be an integer`;
+    }
+
+    const asset = await this.assetRepository.find({
       relations: {
-        userId: true,
-        itemId: true,
+        user: true,
+        item: true,
       },
       where: {
-        userId: {
+        user: {
           id: userId,
         },
-        itemId: {
+      },
+    });
+
+    if (!asset) {
+      return "unregistered asset";
+    }
+
+    return asset;
+  }
+
+  async all2(request: Request, response: Response, next: NextFunction) {
+    const itemId = parseInt(request.params.itemId);
+
+    if (!Number.isInteger(itemId)) {
+      return `itemId should be an integer`;
+    }
+    const asset = await this.assetRepository.find({
+      relations: {
+        user: true,
+        item: true,
+      },
+      where: {
+        item: {
           id: itemId,
         },
       },
@@ -36,25 +61,38 @@ export class AssetController {
     if (!asset) {
       return "unregistered asset";
     }
+
     return asset;
   }
 
-  // async one(request: Request, response: Response, next: NextFunction) {
-  //   const userId = parseInt(request.params.userId);
-  //   const itemId = parseInt(request.params.itemId);
+  async one(request: Request, response: Response, next: NextFunction) {
+    const userId = parseInt(request.params.userId);
+    const itemId = parseInt(request.params.itemId);
+    if (!Number.isInteger(userId)) {
+      return `userId should be an integer`;
+    }
+    if (!Number.isInteger(itemId)) {
+      return `itemId should be an integer`;
+    }
+    const asset = await this.assetRepository.findOne({
+      relations: {
+        user: true,
+        item: true,
+      },
+      where: {
+        user: {
+          id: userId,
+        },
+        item: {
+          id: itemId,
+        },
+      },
+    });
 
-  //   const asset = await this.assetRepository
+    if (!asset) {
+      return "unregistered asset";
+    }
 
-  //     .createQueryBuilder("asset")
-  //     .leftJoinAndSelect("asset.userId", "user")
-  //     .leftJoinAndSelect("asset.itemId", "item")
-  //     .where("asset.userId = :userId", { userId: userId })
-  //     .andWhere("asset.itemId = :itemId", { itemId: itemId })
-  //     .getOne();
-
-  //   if (!asset) {
-  //     return "unregistered asset";
-  //   }
-  //   return asset;
-  // }
+    return asset;
+  }
 }

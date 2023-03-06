@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import { Asset } from "./Asset";
 import { Transaction } from "./Transaction";
 
@@ -8,17 +15,31 @@ export class User {
   id: number;
 
   @Column({ name: "user_name", nullable: false, unique: true })
-  userName: string;
+  name: string;
 
   @Column({ name: "user_address", nullable: false, unique: true })
-  userAddress: string;
+  address: string;
 
-  @OneToMany(() => Asset, (asset) => asset.userId)
+  @CreateDateColumn({
+    default: () => "CURRENT_TIMESTAMP",
+    nullable: false,
+    name: "created_at",
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    default: () => "CURRENT_TIMESTAMP",
+    nullable: false,
+    name: "updated_at",
+  })
+  updatedAt: Date;
+
+  @OneToMany(() => Asset, (asset) => asset.user)
   assets: Asset[];
 
-  @OneToMany(() => Transaction, (transaction) => transaction.toUserId)
+  @OneToMany(() => Transaction, (transaction) => transaction.toUser)
   transactions1: Transaction[];
 
-  @OneToMany(() => Transaction, (transaction) => transaction.fromUserId)
+  @OneToMany(() => Transaction, (transaction) => transaction.fromUser)
   transactions2: Transaction[];
 }

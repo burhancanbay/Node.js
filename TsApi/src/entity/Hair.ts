@@ -1,20 +1,18 @@
 import {
+  Column,
+  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Item } from "./Item";
 
-@Entity()
-export class Category {
+@Entity("hair")
+export class Hair {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: "category_name", unique: true, nullable: false })
-  name: string;
+  @Column({ name: "hair_option", unique: true, nullable: false })
+  option: string;
 
   @CreateDateColumn({
     default: () => "CURRENT_TIMESTAMP",
@@ -29,7 +27,4 @@ export class Category {
     name: "updated_at",
   })
   updatedAt: Date;
-
-  @OneToMany(() => Item, (item) => item.category)
-  items: Item[];
 }
