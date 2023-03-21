@@ -1,29 +1,73 @@
 import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { Asset } from "../entity/Asset";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
+import { userRepository } from "./UserController";
+import { itemRepository } from "./ItemController";
 
-export class AssetController {
-  private assetRepository = AppDataSource.getRepository(Asset);
+const assetRepository = AppDataSource.getRepository(Asset);
 
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.assetRepository.find({
+const getAssets = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const assets = await assetRepository.find({
+    relations: {
+      user: true,
+      item: true,
+    },
+  });
+  return response.status(200).send(assets);
+};
+
+const getAssetsById = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(request.params.id);
+
+    if (!Number.isInteger(id)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
+    }
+
+    const asset = await assetRepository.findOne({
       relations: {
-        user: true,
         item: true,
       },
+      where: { id },
     });
-  }
 
-  async all1(request: Request, response: Response, next: NextFunction) {
+    if (!asset) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ASSET, response);
+    }
+
+    return response.status(200).json(asset);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
+  }
+};
+
+const getAssetsByUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const userId = parseInt(request.params.userId);
 
     if (!Number.isInteger(userId)) {
-      return `userId should be an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
-
-    const asset = await this.assetRepository.find({
+    const _user = await userRepository.findOne({ where: { id: userId } });
+    if (!_user) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_USER, response);
+    }
+    const assets = await assetRepository.find({
       relations: {
-        user: true,
         item: true,
       },
       where: {
@@ -33,23 +77,35 @@ export class AssetController {
       },
     });
 
-    if (!asset) {
-      return "unregistered asset";
+    if (assets.length == 0) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ASSET, response);
     }
 
-    return asset;
+    return response.status(200).json(assets);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async all2(request: Request, response: Response, next: NextFunction) {
+const getAssetsByItem = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const itemId = parseInt(request.params.itemId);
 
     if (!Number.isInteger(itemId)) {
-      return `itemId should be an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
-    const asset = await this.assetRepository.find({
+    const item = await itemRepository.findOne({ where: { id: itemId } });
+    if (!item) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
+    }
+    const asset = await assetRepository.find({
       relations: {
         user: true,
-        item: true,
       },
       where: {
         item: {
@@ -58,41 +114,64 @@ export class AssetController {
       },
     });
 
-    if (!asset) {
-      return "unregistered asset";
+    if (asset.length == 0) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ASSET, response);
     }
+    return response.status(200).json({ asset });
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
+  }
+};
 
-    return asset;
+const getAssetDetails = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const userId = parseInt(request.params.userId);
+  const itemId = parseInt(request.params.itemId);
+  if (!Number.isInteger(userId)) {
+    return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_USER, response);
+  }
+  if (!Number.isInteger(itemId)) {
+    return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_ITEM, response);
+  }
+  const user = await userRepository.findOne({ where: { id: userId } });
+  if (!user) {
+    return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_USER, response);
+  }
+  const item = await itemRepository.findOne({ where: { id: itemId } });
+  if (!item) {
+    return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
+  }
+  const asset = await assetRepository.findOne({
+    relations: {
+      user: true,
+      item: true,
+    },
+    where: {
+      user: {
+        id: userId,
+      },
+      item: {
+        id: itemId,
+      },
+    },
+  });
+
+  if (!asset) {
+    return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ASSET, response);
   }
 
-  async one(request: Request, response: Response, next: NextFunction) {
-    const userId = parseInt(request.params.userId);
-    const itemId = parseInt(request.params.itemId);
-    if (!Number.isInteger(userId)) {
-      return `userId should be an integer`;
-    }
-    if (!Number.isInteger(itemId)) {
-      return `itemId should be an integer`;
-    }
-    const asset = await this.assetRepository.findOne({
-      relations: {
-        user: true,
-        item: true,
-      },
-      where: {
-        user: {
-          id: userId,
-        },
-        item: {
-          id: itemId,
-        },
-      },
-    });
+  return response.status(200).send(asset);
+};
 
-    if (!asset) {
-      return "unregistered asset";
-    }
-
-    return asset;
-  }
-}
+export {
+  assetRepository,
+  getAssets,
+  getAssetDetails,
+  getAssetsById,
+  getAssetsByUser,
+  getAssetsByItem,
+};

@@ -1,37 +1,21 @@
-import { AssetController } from "../controller/AssetController";
-import { RouteType } from "./types";
+import { verify } from "crypto";
+import {
+  getAssetDetails,
+  getAssets,
+  getAssetsByUser,
+  getAssetsByItem,
+  getAssetsById,
+} from "../controller/AssetController";
+import { Router } from "express";
+import { userTokenById } from "../middleWares/userTokenById";
+import { adminUser } from "../middleWares/adminUser";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/assets",
-    controller: AssetController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/assets/user/:userId/item/:itemId",
-    controller: AssetController,
-    action: "one",
-  },
-  {
-    method: "get",
-    route: "/assets/item/:itemId",
-    controller: AssetController,
-    action: "all2",
-  },
-  {
-    method: "get",
-    route: "/assets/user/:userId",
-    controller: AssetController,
-    action: "all1",
-  },
-  {
-    method: "get",
-    route: "/assets/:id",
-    controller: AssetController,
-    action: "one",
-  },
-];
+const assetRouter = Router();
 
-export default routes;
+assetRouter.get("/", adminUser, getAssets);
+assetRouter.get("/:id", adminUser, getAssetsById);
+assetRouter.get("/user/:userId/", userTokenById, getAssetsByUser);
+assetRouter.get("/item/:itemId/", adminUser, getAssetsByItem);
+assetRouter.get("/user/:userId/item/:itemId", userTokenById, getAssetDetails);
+
+export { assetRouter };

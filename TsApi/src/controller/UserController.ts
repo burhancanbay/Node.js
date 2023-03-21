@@ -1,91 +1,239 @@
 import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entity/User";
-import { QueryFailedError, Unique } from "typeorm";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
+import { IsNotEmpty, isNotEmpty, validate } from "class-validator";
 
-export class UserController {
-  private _userRepository = AppDataSource.getRepository(User);
+const userRepository = AppDataSource.getRepository(User);
 
-  public get userRepository() {
-    return this._userRepository;
-  }
+const getUsers = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const user = await userRepository.find();
 
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.userRepository.find();
-  }
+  return response.status(200).send(user);
+};
 
-  // async oneName(request: Request, response: Response, next: NextFunction) {
-  //   const name = request.params.name;
+const getUserById = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = parseInt(request.params.userId);
 
-  //   const user = await this.userRepository.findOneBy({
-  //     userName: name,
-  //   });
-
-  //   if (!user) {
-  //     return "unregistered user";
-  //   }
-  //   return user;
-  // }
-
-  async one(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
-
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+    if (!Number.isInteger(userId)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    const user = await this.userRepository.findOne({
-      where: { id },
+    const user = await userRepository.findOne({
+      where: { id: userId },
     });
 
     if (!user) {
-      return "unregistered user";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_USER, response);
     }
-    return user;
+    return response.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const { userName, userAddress } = request.body;
+const getUserByName = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const username = request.params.name;
 
-    const user = Object.assign(new User(), {
-      userName,
-      userAddress,
+    const user = await userRepository.findOne({
+      where: { name: username },
     });
+    // const user = await AppDataSource.query("SELECT convert_user_name($1)", [
+    //   username,
+    // ]);
 
-    return this.userRepository.save(user);
+    return response.status(200).send(user);
+
+    if (!user) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_USER, response);
+    }
+    return response.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async update(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+const register = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, address } = request.body;
+    let user = new User();
+    user.name = name;
+    user.address = user.setAddress(address);
 
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+    const errors = await validate(user);
+    if (errors.length > 0) {
+      return response.status(400).send(errors);
     }
 
-    const updatedUser = await this.userRepository.findOneBy({ id });
-
-    if (!updatedUser) {
-      return "this user not exist";
-    }
-
-    this.userRepository.merge(updatedUser, request.body);
-
-    return await this.userRepository.save(updatedUser);
+    await userRepository.save(user);
+    return response.status(201).send(user);
+  } catch (error) {
+    return response.status(409).send(error.detail);
   }
+};
 
-  async remove(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
+const login = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name, address } = request.body;
 
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+    if (!(name && address)) {
+      return response.status(400).send("not null");
     }
+    let user: User;
+    user = await userRepository.findOneBy({ name: name });
 
-    let removedUser = await this.userRepository.findOneBy({ id });
-
-    if (!removedUser) {
-      return "this user not exist";
+    if (!user) {
+      return response.status(400).send("please sign up before login");
     }
+    if (user && !user.isValidAddress(address)) {
+      return response.status(401).send("incorrect address");
+    }
+    const access_token = user.generateJWT();
 
-    return await this.userRepository.remove(removedUser);
+    return response.status(200).json({ accessToken: access_token });
+  } catch (error) {
+    response.status(401).send(error);
   }
-}
+};
+
+// const createUser = async (
+//   request: Request,
+//   response: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { name, address } = request.body;
+
+//     // const user = await AppDataSource.query("CALL insert_user($1, $2)", [
+//     //   name,
+//     //   address,
+//     // ]);
+
+//     // return response.status(201).send({ message: "new record created" });
+
+//     const user = Object.assign(new User(), {
+//       name,
+//       address,
+//     });
+
+//     await userRepository.save(user);
+
+//     return response.status(201).json(user);
+//   } catch (error) {
+//     return response.status(400).send(error.detail);
+//     // return response.status(400).send({ message: "values must be unique" });
+//   }
+// };
+
+const updateUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = parseInt(request.params.userId);
+
+    if (!Number.isInteger(userId)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
+    }
+    let userToUpdate = await userRepository.findOneBy({ id: userId });
+
+    if (!userToUpdate) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_USER, response);
+    }
+    userRepository.merge(userToUpdate, request.body);
+
+    const { name, address } = request.body;
+    userToUpdate.name = name;
+    userToUpdate.address = userToUpdate.setAddress(address);
+    await userRepository.save(userToUpdate);
+
+    return response.status(200).send(userToUpdate);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
+  }
+};
+
+const removeUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = parseInt(request.params.userId);
+
+    if (!Number.isInteger(userId)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
+    }
+    let userToRemove = await userRepository.findOneBy({ id: userId });
+
+    if (!userToRemove) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_USER, response);
+    }
+    await userRepository.softRemove({ id: userId });
+
+    return response.status(200).send(userToRemove);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
+  }
+};
+
+const restoreUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = parseInt(request.params.userId);
+
+    if (!Number.isInteger(userId)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
+    }
+
+    let userToRestore = await userRepository.restore({ id: userId });
+
+    return response.status(200).send(userToRestore);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
+  }
+};
+
+export {
+  getUsers,
+  getUserById,
+  getUserByName,
+  register,
+  login,
+  // createUser,
+  updateUser,
+  removeUser,
+  restoreUser,
+  userRepository,
+};

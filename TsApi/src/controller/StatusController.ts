@@ -1,73 +1,123 @@
 import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { Status } from "../entity/Status";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
 
-export class StatusController {
-  private _statusRepository = AppDataSource.getRepository(Status);
+const statusRepository = AppDataSource.getRepository(Status);
 
-  public get statusRepository() {
-    return this._statusRepository;
-  }
+const getStatuses = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const statuses = await statusRepository.find();
+  return response.status(200).send(statuses);
+};
 
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.statusRepository.find();
-  }
-
-  async one(request: Request, response: Response, next: NextFunction) {
+const getStatusDetails = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
+
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    const status = await this.statusRepository.findOne({
+    const status = await statusRepository.findOne({
       where: { id },
     });
 
     if (!status) {
-      return "unregistered status";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_STATUS, response);
     }
-    return status;
+    return response.status(200).send(status);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const { statusName } = request.body;
+const createStatus = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name } = request.body;
 
-    const user = Object.assign(new Status(), {
-      statusName,
+    const status = Object.assign(new Status(), {
+      name,
     });
+    await statusRepository.save(status);
 
-    return this.statusRepository.save(user);
+    return response.status(201).send(status);
+  } catch (error) {
+    return response.status(400).send(error.detail);
   }
+};
 
-  async update(request: Request, response: Response, next: NextFunction) {
+const updateStatus = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
+
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    let statusToUpdate = await this.statusRepository.findOneBy({ id });
+    let statusToUpdate = await statusRepository.findOneBy({ id });
 
     if (!statusToUpdate) {
-      return "this status not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_STATUS, response);
     }
 
-    this.statusRepository.merge(statusToUpdate, request.body);
+    statusRepository.merge(statusToUpdate, request.body);
 
-    return await this.statusRepository.save(statusToUpdate);
+    await statusRepository.save(statusToUpdate);
+
+    return response.status(200).send(statusToUpdate);
+  } catch (error) {
+    console.log(error);
+    response.status(400).send(error.detail);
   }
+};
 
-  async remove(request: Request, response: Response, next: NextFunction) {
+const removeStatus = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    let statusToRemove = await this.statusRepository.findOneBy({ id });
+    let statusToRemove = await statusRepository.findOneBy({ id });
 
     if (!statusToRemove) {
-      return "this status not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_STATUS, response);
     }
+    await statusRepository.remove(statusToRemove);
 
-    return await this.statusRepository.remove(statusToRemove);
+    return response.status(200).send(statusToRemove);
+  } catch (error) {
+    console.log(error);
+    response.status(400).send(error.detail);
   }
-}
+};
+
+export {
+  statusRepository,
+  getStatuses,
+  getStatusDetails,
+  createStatus,
+  updateStatus,
+  removeStatus,
+};

@@ -31,13 +31,13 @@ export class TransactionView {
   id: number;
 
   @ViewColumn()
-  transactionQuantity: number;
+  quantity: number;
 
   @ViewColumn()
-  fromUserName: string;
+  fromUser: string;
 
   @ViewColumn()
-  toUserName: string;
+  toUser: string;
 
   @ViewColumn()
   itemName: string;

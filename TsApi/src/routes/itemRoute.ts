@@ -1,37 +1,19 @@
-import { ItemController } from "../controller/ItemController";
-import { RouteType } from "./types";
+import {
+  createItem,
+  getItemDetails,
+  getItems,
+  removeItem,
+  updateItem,
+} from "../controller/ItemController";
+import { Router } from "express";
+import { adminUser } from "../middleWares/adminUser";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/items",
-    controller: ItemController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/items/:id",
-    controller: ItemController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/items",
-    controller: ItemController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/items/:id",
-    controller: ItemController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/items/:id",
-    controller: ItemController,
-    action: "remove",
-  },
-];
+const itemRouter = Router();
 
-export default routes;
+itemRouter.get("/", getItems);
+itemRouter.get("/:id", getItemDetails);
+itemRouter.post("/", adminUser, createItem);
+itemRouter.put("/:id", adminUser, updateItem);
+itemRouter.delete("/:id", adminUser, removeItem);
+
+export { itemRouter };

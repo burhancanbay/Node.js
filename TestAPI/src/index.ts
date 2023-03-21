@@ -3,7 +3,7 @@ import * as bodyParser from "body-parser";
 import { Request, Response } from "express";
 import { AppDataSource } from "./data-source";
 
-import { router } from "./routes";
+import { userRouter } from "./route/userRouter";
 
 AppDataSource.initialize()
   .then(async () => {
@@ -14,9 +14,7 @@ AppDataSource.initialize()
       res.send("hello world");
     });
 
-    app.use("/users", router);
-
-    // app.route("/users").get(router);
+    app.use("/users", userRouter);
 
     const port = 3000;
 

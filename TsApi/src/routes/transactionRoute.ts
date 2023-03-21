@@ -1,37 +1,37 @@
-import { TransactionController } from "../controller/TransactionController";
-import { RouteType } from "./types";
+import { Router } from "express";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/transactions",
-    controller: TransactionController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/transactions/:id",
-    controller: TransactionController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/transactions",
-    controller: TransactionController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/transactions/:id",
-    controller: TransactionController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/transactions/:id",
-    controller: TransactionController,
-    action: "remove",
-  },
-];
+import {
+  createTransaction,
+  getTransactionByFromUser,
+  getTransactionById,
+  getTransactionByToUser,
+  getTransactionDetails,
+  getTransactions,
+  removeTransaction,
+  updateTransaction,
+} from "../controller/TransactionController";
+import { adminUser } from "../middleWares/adminUser";
+import { fromUserToUserToken } from "../middleWares/fromUserToUserToken";
+import { fromUserToken } from "../middleWares/fromUserToken";
+import { toUserToken } from "../middleWares/toUserToken";
 
-export default routes;
+const transactionRouter = Router();
+
+transactionRouter.get("/", adminUser, getTransactions);
+transactionRouter.get(
+  "/fromUser/:fromUserId/toUser/:toUserId",
+  fromUserToUserToken,
+  getTransactionDetails
+);
+transactionRouter.get(
+  "/fromUser/:fromUserId",
+  fromUserToken,
+  getTransactionByFromUser
+);
+transactionRouter.get("/toUser/:toUserId", toUserToken, getTransactionByToUser);
+transactionRouter.get("/:id", adminUser, getTransactionById);
+transactionRouter.post("/", adminUser, createTransaction);
+transactionRouter.put("/:id", adminUser, updateTransaction);
+transactionRouter.delete("/:id", adminUser, removeTransaction);
+
+export { transactionRouter };

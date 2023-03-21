@@ -1,37 +1,20 @@
-import { ContractController } from "../controller/ContractController";
-import { RouteType } from "./types";
+import {
+  createContract,
+  getContractDetails,
+  getContracts,
+  removeContract,
+  updateContract,
+} from "../controller/ContractController";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/contracts",
-    controller: ContractController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/contracts/:id",
-    controller: ContractController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/contracts",
-    controller: ContractController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/contracts/:id",
-    controller: ContractController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/contracts/:id",
-    controller: ContractController,
-    action: "remove",
-  },
-];
+import { Router } from "express";
+import { adminUser } from "../middleWares/adminUser";
 
-export default routes;
+const contractRouter = Router();
+
+contractRouter.get("/", getContracts);
+contractRouter.get("/:id", getContractDetails);
+contractRouter.post("/", adminUser, createContract);
+contractRouter.put("/:id", adminUser, updateContract);
+contractRouter.delete("/:id", adminUser, removeContract);
+
+export { contractRouter };

@@ -1,37 +1,19 @@
-import { ReleaseController } from "../controller/ReleaseController";
-import { RouteType } from "./types";
+import { Router } from "express";
+import {
+  createRelease,
+  getReleaseDetails,
+  getReleases,
+  removeRelease,
+  updateRelease,
+} from "../controller/ReleaseController";
+import { adminUser } from "../middleWares/adminUser";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/releases",
-    controller: ReleaseController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/releases/:id",
-    controller: ReleaseController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/releases",
-    controller: ReleaseController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/releases/:id",
-    controller: ReleaseController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/releases/:id",
-    controller: ReleaseController,
-    action: "remove",
-  },
-];
+const releaseRouter = Router();
 
-export default routes;
+releaseRouter.get("/", getReleases);
+releaseRouter.get("/:id", getReleaseDetails);
+releaseRouter.post("/", adminUser, createRelease);
+releaseRouter.put("/:id", adminUser, updateRelease);
+releaseRouter.delete("/:id", adminUser, removeRelease);
+
+export { releaseRouter };

@@ -20,5 +20,5 @@ export class ReleaseView {
   quantity: number;
 
   @ViewColumn()
-  itemName: string;
+  name: string;
 }

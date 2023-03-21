@@ -2,34 +2,41 @@ import { AppDataSource } from "../data-source";
 
 import { NextFunction, Request, Response } from "express";
 import { Item } from "../entity/Item";
-import { CategoryController } from "./CategoryController";
-import { ContractController } from "./ContractController";
-import { StatusController } from "./StatusController";
+import { categoryRepository } from "./CategoryController";
+import { contractRepository } from "./ContractController";
+import { statusRepository } from "./StatusController";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
 
-export class ItemController {
-  private _itemRepository = AppDataSource.getRepository(Item);
+const itemRepository = AppDataSource.getRepository(Item);
 
-  public get itemRepository() {
-    return this._itemRepository;
-  }
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.itemRepository.find({
-      relations: {
-        category: true,
-        contract: true,
-        status: true,
-        parent: true,
-      },
-    });
-  }
+const getItems = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const items = await itemRepository.find({
+    relations: {
+      category: true,
+      contract: true,
+      status: true,
+      parent: true,
+    },
+  });
+  return response.status(200).send(items);
+};
 
-  async one(request: Request, response: Response, next: NextFunction) {
+const getItemDetails = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    const item = await this.itemRepository.findOne({
+    const item = await itemRepository.findOne({
       where: { id },
       relations: {
         category: true,
@@ -40,147 +47,190 @@ export class ItemController {
     });
 
     if (!item) {
-      return "unregistered item";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
     }
-    return item;
+    return response.status(200).send(item);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    let statusController = new StatusController();
-    let categoryController = new CategoryController();
-    let contractController = new ContractController();
-
-    const { itemCode, gameCode, itemName, parent, category, status, contract } =
+const createItem = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { itemCode, gameCode, name, parent, category, status, contract } =
       request.body;
 
     if (!Number.isInteger(status)) {
-      return `${status} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_STATUS, response);
     }
-    const _status = await statusController.statusRepository.findOne({
+    const _status = await statusRepository.findOne({
       where: { id: status },
     });
     if (!_status) {
-      return "unregistered status";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_STATUS, response);
     }
 
     if (!Number.isInteger(category)) {
-      return `${category} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_CATEGORY, response);
     }
 
-    const _category = await categoryController.categoryRepository.findOne({
+    const _category = await categoryRepository.findOne({
       where: { id: category },
     });
     if (!_category) {
-      return "unregistered category";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CATEGORY, response);
     }
 
     if (!Number.isInteger(contract)) {
-      return `${contract} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_CONTRACT, response);
     }
-    const _contract = await contractController.contractRepository.findOne({
+    const _contract = await contractRepository.findOne({
       where: { id: contract },
     });
     if (!_contract) {
-      return "unregistered contract";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CONTRACT, response);
     }
 
     if (!Number.isInteger(parent)) {
-      return `${parent} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARENT_ITEM, response);
     }
-    const parentItem = await this.itemRepository.findOne({
+    const parentItem = await itemRepository.findOne({
       where: { id: parent },
     });
     if (!parentItem) {
-      return "unregistered parent item";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_PARENT_ITEM, response);
     }
     const item = Object.assign(new Item(), {
       itemCode,
       gameCode,
-      itemName,
+      name,
       parent,
       category,
       status,
       contract,
     });
-
-    return this.itemRepository.save(item);
+    await itemRepository.save(item);
+    return response.status(200).send(item);
+  } catch (error) {
+    return response.status(400).send(error.detail);
   }
+};
 
-  async update(request: Request, response: Response, next: NextFunction) {
-    let statusController = new StatusController();
-    let categoryController = new CategoryController();
-    let contractController = new ContractController();
+const updateItem = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    const { itemCode, gameCode, itemName, parent, category, status, contract } =
+    const { itemCode, gameCode, name, parent, category, status, contract } =
       request.body;
 
     if (!Number.isInteger(status)) {
-      return `${status} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_STATUS, response);
     }
-    const _status = await statusController.statusRepository.findOne({
+    const _status = await statusRepository.findOne({
       where: { id: status },
     });
     if (!_status) {
-      return "unregistered status";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_STATUS, response);
     }
 
     if (!Number.isInteger(category)) {
-      return `${category} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_CATEGORY, response);
     }
-    const _category = await categoryController.categoryRepository.findOne({
+    const _category = await categoryRepository.findOne({
       where: { id: category },
     });
     if (!_category) {
-      return "unregistered category";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CATEGORY, response);
     }
 
     if (!Number.isInteger(contract)) {
-      return `${contract} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_CONTRACT, response);
     }
-    const _contract = await contractController.contractRepository.findOne({
+    const _contract = await contractRepository.findOne({
       where: { id: contract },
     });
     if (!_contract) {
-      return "unregistered contract";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CATEGORY, response);
     }
 
     if (!Number.isInteger(parent)) {
-      return `${parent} is not an integer`;
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARENT_ITEM, response);
     }
-    const parentItem = await this.itemRepository.findOne({
+    const parentItem = await itemRepository.findOne({
       where: { id: parent },
     });
     if (!parentItem) {
-      return "unregistered parent item";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_PARENT_ITEM, response);
     }
 
-    let itemToUpdate = await this.itemRepository.findOneBy({ id });
+    let itemToUpdate = await itemRepository.findOneBy({ id });
 
     if (!itemToUpdate) {
-      return "this item not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
     }
 
-    this.itemRepository.merge(itemToUpdate, request.body);
+    itemRepository.merge(itemToUpdate, request.body);
 
-    return await this.itemRepository.save(itemToUpdate);
+    await itemRepository.save(itemToUpdate);
+
+    return response.status(200).send(itemToUpdate);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async remove(request: Request, response: Response, next: NextFunction) {
+const removeItem = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    let itemToRemove = await this.itemRepository.findOneBy({ id });
+    let itemToRemove = await itemRepository.findOne({
+      where: { id },
+      relations: {
+        category: true,
+        contract: true,
+        status: true,
+        parent: true,
+      },
+    });
 
     if (!itemToRemove) {
-      return "this item not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
     }
 
-    return await this.itemRepository.remove(itemToRemove);
+    await itemRepository.remove(itemToRemove);
+
+    return response.status(200).send(itemToRemove);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
-}
+};
+
+export {
+  itemRepository,
+  getItems,
+  getItemDetails,
+  createItem,
+  updateItem,
+  removeItem,
+};

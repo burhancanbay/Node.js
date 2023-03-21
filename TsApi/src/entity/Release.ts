@@ -5,25 +5,13 @@ import {
   ManyToOne,
   CreateDateColumn,
   JoinColumn,
-  InsertEvent,
-  UpdateEvent,
-  RemoveEvent,
   UpdateDateColumn,
 } from "typeorm";
 
 import { Item } from "./Item";
-import { Asset } from "./Asset";
 
 @Entity("release")
 export class Release {
-  // beforeInsert(event: InsertEvent<Asset>) {
-  //   Set;
-  // }
-  // afterInsert(event: InsertEvent<Asset>) {}
-  // beforeUpdate(event: UpdateEvent<Asset>) {}
-  // afterUpdate(event: UpdateEvent<Asset>) {}
-  // beforeRemove(event: RemoveEvent<Asset>) {}
-  // afterRemove(event: RemoveEvent<Asset>) {}
   @PrimaryGeneratedColumn()
   id: number;
 

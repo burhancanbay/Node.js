@@ -9,7 +9,9 @@ const getUsers = async (
   response: Response,
   next: NextFunction
 ) => {
-  return await userRepository.find();
+  const user = await userRepository.find();
+
+  return response.status(200).send(user);
 };
 
 const getUserDetails = async (
@@ -26,10 +28,10 @@ const getUserDetails = async (
   if (!user) {
     return "unregistered user";
   }
-  return user;
+  return response.status(200).send(user);
 };
 
-const cerateUser = async (
+const createUser = async (
   request: Request,
   response: Response,
   next: NextFunction
@@ -42,7 +44,28 @@ const cerateUser = async (
     age,
   });
 
-  return await userRepository.save(user);
+  await userRepository.save(user);
+
+  return response.status(201).send(user);
+};
+
+const updateUser = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const id = parseInt(request.params.id);
+
+  let userToUpdate = await userRepository.findOneBy({ id });
+
+  if (!userToUpdate) {
+    return "this user not exist";
+  }
+
+  userRepository.merge(userToUpdate, request.body);
+  await userRepository.save(userToUpdate);
+
+  return response.status(200).send(userToUpdate);
 };
 
 const removeUser = async (
@@ -60,7 +83,7 @@ const removeUser = async (
 
   await userRepository.remove(userToRemove);
 
-  return "user has been removed";
+  return response.status(200).send(userToRemove);
 };
 
-export default { getUsers, getUserDetails, cerateUser, removeUser };
+export { getUsers, getUserDetails, createUser, updateUser, removeUser };

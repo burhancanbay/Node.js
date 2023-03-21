@@ -12,7 +12,7 @@ import { User } from "./User";
 import { Item } from "./Item";
 import { TransactionType } from "./TransactionType";
 
-@Entity()
+@Entity("transaction")
 export class Transaction {
   @PrimaryGeneratedColumn()
   id: number;

@@ -2,78 +2,136 @@ import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 
 import { TransactionType } from "../entity/TransactionType";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
 
-export class TransactionTypeController {
-  private _transactionTypeRepository =
-    AppDataSource.getRepository(TransactionType);
+const transactionTypeRepository = AppDataSource.getRepository(TransactionType);
 
-  public get transactionTypeRepository() {
-    return this._transactionTypeRepository;
-  }
+const getTransactionTypes = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const transactionTypes = await transactionTypeRepository.find();
+  return response.status(200).send(transactionTypes);
+};
 
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.transactionTypeRepository.find();
-  }
-
-  async one(request: Request, response: Response, next: NextFunction) {
+const getTransactionTypeDetails = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    const transactionType = await this.transactionTypeRepository.findOne({
+    const transactionType = await transactionTypeRepository.findOne({
       where: { id },
     });
 
     if (!transactionType) {
-      return "unregistered transaction type";
+      return sendErrorMessage(
+        ERROR_MESSAGES.NOT_EXISTS_TRANSACTION_TYPE,
+        response
+      );
     }
-    return transactionType;
+    return response.status(200).send(transactionType);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const { transactionName } = request.body;
+const createTransactionType = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name } = request.body;
 
     const transactionType = Object.assign(new TransactionType(), {
-      transactionName,
+      name,
+    });
+    await transactionTypeRepository.save(transactionType);
+
+    return response.status(201).send(transactionType);
+  } catch (error) {
+    return response.status(400).send(error.detail);
+  }
+};
+
+const updateTransactionType = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(request.params.id);
+
+    if (!Number.isInteger(id)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
+    }
+
+    let transactionTypeToUpdate = await transactionTypeRepository.findOneBy({
+      id,
     });
 
-    return this.transactionTypeRepository.save(transactionType);
-  }
-
-  async update(request: Request, response: Response, next: NextFunction) {
-    const id = parseInt(request.params.id);
-
-    if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
-    }
-
-    let transactionTypeToUpdate =
-      await this.transactionTypeRepository.findOneBy({ id });
-
     if (!transactionTypeToUpdate) {
-      return "this transaction type not exist";
+      return sendErrorMessage(
+        ERROR_MESSAGES.NOT_EXISTS_TRANSACTION_TYPE,
+        response
+      );
     }
 
-    this.transactionTypeRepository.merge(transactionTypeToUpdate, request.body);
+    transactionTypeRepository.merge(transactionTypeToUpdate, request.body);
 
-    return await this.transactionTypeRepository.save(transactionTypeToUpdate);
+    await transactionTypeRepository.save(transactionTypeToUpdate);
+
+    return response.status(200).send(transactionTypeToUpdate);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async remove(request: Request, response: Response, next: NextFunction) {
+const removeTransactionType = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
 
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    let transactionTypeToRemove =
-      await this.transactionTypeRepository.findOneBy({ id });
+    let transactionTypeToRemove = await transactionTypeRepository.findOneBy({
+      id,
+    });
 
     if (!transactionTypeToRemove) {
-      return "this transaction type not exist";
+      return sendErrorMessage(
+        ERROR_MESSAGES.NOT_EXISTS_TRANSACTION_TYPE,
+        response
+      );
     }
+    await transactionTypeRepository.remove(transactionTypeToRemove);
 
-    return await this.transactionTypeRepository.remove(transactionTypeToRemove);
+    return response.status(200).send(transactionTypeToRemove);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
-}
+};
+
+export {
+  transactionTypeRepository,
+  getTransactionTypes,
+  getTransactionTypeDetails,
+  createTransactionType,
+  updateTransactionType,
+  removeTransactionType,
+};

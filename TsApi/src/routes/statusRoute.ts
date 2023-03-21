@@ -1,37 +1,19 @@
-import { StatusController } from "../controller/StatusController";
-import { RouteType } from "./types";
+import { Router } from "express";
+import {
+  createStatus,
+  getStatusDetails,
+  getStatuses,
+  removeStatus,
+  updateStatus,
+} from "../controller/StatusController";
+import { adminUser } from "../middleWares/adminUser";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/statuses",
-    controller: StatusController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/statuses/:id",
-    controller: StatusController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/statuses",
-    controller: StatusController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/statuses/:id",
-    controller: StatusController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/statuses/:id",
-    controller: StatusController,
-    action: "remove",
-  },
-];
+const statusRouter = Router();
 
-export default routes;
+statusRouter.get("/", getStatuses);
+statusRouter.get("/:id", getStatusDetails);
+statusRouter.post("/", adminUser, createStatus);
+statusRouter.put("/:id", adminUser, updateStatus);
+statusRouter.delete("/:id", adminUser, removeStatus);
+
+export { statusRouter };

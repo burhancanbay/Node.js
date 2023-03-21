@@ -1,37 +1,19 @@
-import { TransactionTypeController } from "../controller/TransactionTypeController";
-import { RouteType } from "./types";
+import { Router } from "express";
+import {
+  createTransactionType,
+  getTransactionTypeDetails,
+  getTransactionTypes,
+  removeTransactionType,
+  updateTransactionType,
+} from "../controller/TransactionTypeController";
+import { adminUser } from "../middleWares/adminUser";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/transactiontypes",
-    controller: TransactionTypeController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/transactiontypes/:id",
-    controller: TransactionTypeController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/transactiontypes",
-    controller: TransactionTypeController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/transactiontypes/:id",
-    controller: TransactionTypeController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/transactiontypes/:id",
-    controller: TransactionTypeController,
-    action: "remove",
-  },
-];
+const transactionTypeRouter = Router();
 
-export default routes;
+transactionTypeRouter.get("/", getTransactionTypes);
+transactionTypeRouter.get("/:id", getTransactionTypeDetails);
+transactionTypeRouter.post("/", adminUser, createTransactionType);
+transactionTypeRouter.put("/:id", adminUser, updateTransactionType);
+transactionTypeRouter.delete("/:id", adminUser, removeTransactionType);
+
+export { transactionTypeRouter };

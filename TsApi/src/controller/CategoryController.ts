@@ -1,73 +1,117 @@
 import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { Category } from "../entity/Category";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
 
-export class CategoryController {
-  private _categoryRepository = AppDataSource.getRepository(Category);
+const categoryRepository = AppDataSource.getRepository(Category);
 
-  public get categoryRepository() {
-    return this._categoryRepository;
-  }
+const getCategories = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const categories = await categoryRepository.find();
+  return response.status(200).send(categories);
+};
 
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.categoryRepository.find();
-  }
-
-  async one(request: Request, response: Response, next: NextFunction) {
+const getCategoryDetails = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
-
-    const category = await this.categoryRepository.findOne({
+    const category = await categoryRepository.findOne({
       where: { id },
     });
-
     if (!category) {
-      return "unregistered category";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CATEGORY, response);
     }
-    return category;
+    return response.status(200).send(category);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    const { categoryName } = request.body;
+const createCategory = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { name } = request.body;
 
     const category = Object.assign(new Category(), {
-      categoryName,
+      name,
     });
+    await categoryRepository.save(category);
 
-    return this.categoryRepository.save(category);
+    return response.status(201).send(category);
+  } catch (error) {
+    return response.status(400).send(error.detail);
   }
+};
 
-  async update(request: Request, response: Response, next: NextFunction) {
+const updateCategory = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
-
-    let categoryToUpdate = await this.categoryRepository.findOneBy({ id });
+    let categoryToUpdate = await categoryRepository.findOneBy({ id });
 
     if (!categoryToUpdate) {
-      return "this category not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CATEGORY, response);
     }
+    categoryRepository.merge(categoryToUpdate, request.body);
 
-    this.categoryRepository.merge(categoryToUpdate, request.body);
+    await categoryRepository.save(categoryToUpdate);
 
-    return await this.categoryRepository.save(categoryToUpdate);
+    return response.status(200).send(categoryToUpdate);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async remove(request: Request, response: Response, next: NextFunction) {
+const removeCategory = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
-
-    let categoryToRemove = await this.categoryRepository.findOneBy({ id });
+    let categoryToRemove = await categoryRepository.findOneBy({ id });
 
     if (!categoryToRemove) {
-      return "this category not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_CATEGORY, response);
     }
 
-    return await this.categoryRepository.remove(categoryToRemove);
+    await categoryRepository.remove(categoryToRemove);
+
+    return response.status(200).send(categoryToRemove);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
-}
+};
+
+export {
+  categoryRepository,
+  getCategories,
+  getCategoryDetails,
+  createCategory,
+  updateCategory,
+  removeCategory,
+};

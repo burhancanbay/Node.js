@@ -8,7 +8,7 @@ import {
 } from "typeorm";
 import { Transaction } from "./Transaction";
 
-@Entity()
+@Entity("transaction_type")
 export class TransactionType {
   @PrimaryGeneratedColumn()
   id: number;
@@ -17,14 +17,16 @@ export class TransactionType {
   name: string;
 
   @CreateDateColumn({
-    default: () => "CURRENT_TIMESTAMP",
+    type: "time with time zone",
+    default: () => "now()",
     nullable: false,
     name: "created_at",
   })
   createdAt: Date;
 
   @UpdateDateColumn({
-    default: () => "CURRENT_TIMESTAMP",
+    type: "time with time zone",
+    default: () => "now()",
     nullable: false,
     name: "updated_at",
   })

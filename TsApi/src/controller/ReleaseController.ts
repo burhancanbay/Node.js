@@ -2,88 +2,150 @@ import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { Release } from "../entity/Release";
 import { Item } from "../entity/Item";
-import { ItemController } from "./ItemController";
+import { itemRepository } from "./ItemController";
+import { send } from "process";
+import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
 
-export class ReleaseController {
-  private releaseRepository = AppDataSource.getRepository(Release);
+const releaseRepository = AppDataSource.getRepository(Release);
 
-  async all(request: Request, response: Response, next: NextFunction) {
-    return this.releaseRepository.find({ relations: { item: true } });
-  }
+const getReleases = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  const releases = await releaseRepository.find({ relations: { item: true } });
 
-  async one(request: Request, response: Response, next: NextFunction) {
+  return response.status(200).send(releases);
+};
+
+const getReleaseDetails = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    const release = await this.releaseRepository.findOne({
+    const release = await releaseRepository.findOne({
       where: { id },
       relations: { item: true },
     });
 
     if (!release) {
-      return "unregistered release";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_RELEASE, response);
     }
-    return release;
+    return response.status(200).send(release);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async save(request: Request, response: Response, next: NextFunction) {
-    let itemController = new ItemController();
-    const { releaseQty, releaseDate, item } = request.body;
+const createRelease = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
+    const { quantity, item } = request.body;
 
-    const _item = await itemController.itemRepository.findOne({
+    if (!Number.isInteger(item)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_ITEM, response);
+    }
+
+    const _item = await itemRepository.findOne({
       where: { id: item },
     });
     if (!_item) {
-      return "unregistered item";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
     }
     const release = Object.assign(new Release(), {
-      releaseQty,
-      releaseDate,
+      quantity,
       item,
     });
+    await releaseRepository.save(release);
 
-    return this.releaseRepository.save(release);
+    return response.status(201).send(release);
+  } catch (error) {
+    return response.status(400).send(error.detail);
   }
+};
 
-  async update(request: Request, response: Response, next: NextFunction) {
-    let itemController = new ItemController();
+const updateRelease = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
-    const { releaseQty, releaseDate, item } = request.body;
+    const { item } = request.body;
 
-    let releaseToUpdate = await this.releaseRepository.findOneBy({ id });
+    if (!Number.isInteger(item)) {
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_ITEM, response);
+    }
+
+    let releaseToUpdate = await releaseRepository.findOneBy({ id });
 
     if (!releaseToUpdate) {
-      return "this release not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_RELEASE, response);
     }
-    const _item = await itemController.itemRepository.findOne({
+    const _item = await itemRepository.findOne({
       where: { id: item },
     });
     if (!_item) {
-      return "unregistered item";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_ITEM, response);
     }
 
-    this.releaseRepository.merge(releaseToUpdate, request.body);
+    releaseRepository.merge(releaseToUpdate, request.body);
 
-    return await this.releaseRepository.save(releaseToUpdate);
+    await releaseRepository.save(releaseToUpdate);
+
+    return response.status(200).send(releaseToUpdate);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
+};
 
-  async remove(request: Request, response: Response, next: NextFunction) {
+const removeRelease = async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+) => {
+  try {
     const id = parseInt(request.params.id);
     if (!Number.isInteger(id)) {
-      return "please enter an integer parameter";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_INTEGER_PARAMS, response);
     }
 
-    let releaseToRemove = await this.releaseRepository.findOneBy({ id });
+    let releaseToRemove = await releaseRepository.findOne({
+      where: { id },
+      relations: { item: true },
+    });
 
     if (!releaseToRemove) {
-      return "this release not exist";
+      return sendErrorMessage(ERROR_MESSAGES.NOT_EXISTS_RELEASE, response);
     }
+    await releaseRepository.remove(releaseToRemove);
 
-    return await this.releaseRepository.remove(releaseToRemove);
+    return response.status(200).send(releaseToRemove);
+  } catch (error) {
+    console.log(error);
+    return response.status(400).send(error.detail);
   }
-}
+};
+
+export {
+  releaseRepository,
+  getReleases,
+  getReleaseDetails,
+  createRelease,
+  updateRelease,
+  removeRelease,
+};

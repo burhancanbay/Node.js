@@ -1,37 +1,19 @@
-import { CategoryController } from "../controller/CategoryController";
-import { RouteType } from "./types";
+import { Router } from "express";
+import {
+  createCategory,
+  getCategories,
+  getCategoryDetails,
+  removeCategory,
+  updateCategory,
+} from "../controller/CategoryController";
+import { adminUser } from "../middleWares/adminUser";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/categories",
-    controller: CategoryController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/categories/:id",
-    controller: CategoryController,
-    action: "one",
-  },
-  {
-    method: "post",
-    route: "/categories",
-    controller: CategoryController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/categories/:id",
-    controller: CategoryController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/categories/:id",
-    controller: CategoryController,
-    action: "remove",
-  },
-];
+const categoryRouter = Router();
 
-export default routes;
+categoryRouter.get("/", getCategories);
+categoryRouter.get("/:id", getCategoryDetails);
+categoryRouter.post("/", adminUser, createCategory);
+categoryRouter.put("/:id", adminUser, updateCategory);
+categoryRouter.delete("/:id", adminUser, removeCategory);
+
+export { categoryRouter };

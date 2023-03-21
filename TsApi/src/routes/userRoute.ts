@@ -1,43 +1,28 @@
-import { UserController } from "../controller/UserController";
-import { RouteType } from "./types";
+import {
+  getUsers,
+  getUserById,
+  // createUser,
+  removeUser,
+  updateUser,
+  getUserByName,
+  register,
+  login,
+  restoreUser,
+} from "../controller/UserController";
+import { Router } from "express";
+import { adminUser } from "../middleWares/adminUser";
+import { userTokenById } from "../middleWares/userTokenById";
+import { userTokenByName } from "../middleWares/userTokenByName";
 
-const routes: RouteType[] = [
-  {
-    method: "get",
-    route: "/users",
-    controller: UserController,
-    action: "all",
-  },
-  {
-    method: "get",
-    route: "/users/:id",
-    controller: UserController,
-    action: "one",
-  },
-  {
-    method: "get",
-    route: "/users/:name",
-    controller: UserController,
-    action: "oneName",
-  },
-  {
-    method: "post",
-    route: "/users",
-    controller: UserController,
-    action: "save",
-  },
-  {
-    method: "put",
-    route: "/users/:id",
-    controller: UserController,
-    action: "update",
-  },
-  {
-    method: "delete",
-    route: "/users/:id",
-    controller: UserController,
-    action: "remove",
-  },
-];
+const userRouter = Router();
 
-export default routes;
+userRouter.get("/", adminUser, getUsers);
+userRouter.get("/:userId", userTokenById, getUserById);
+userRouter.get("/name/:name", userTokenByName, getUserByName);
+userRouter.post("/register", register);
+userRouter.post("/login", login);
+userRouter.put("/:userId", userTokenById, updateUser);
+userRouter.put("/restore/:userId", userTokenById, restoreUser);
+userRouter.delete("/:userId", userTokenById, removeUser);
+
+export { userRouter };
