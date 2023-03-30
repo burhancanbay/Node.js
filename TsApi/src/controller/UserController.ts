@@ -2,7 +2,7 @@ import { AppDataSource } from "../data-source";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entity/User";
 import { ERROR_MESSAGES, sendErrorMessage } from "../errorMessages";
-import { IsNotEmpty, isNotEmpty, validate } from "class-validator";
+import { validate } from "class-validator";
 
 const userRepository = AppDataSource.getRepository(User);
 
