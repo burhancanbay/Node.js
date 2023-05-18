@@ -7,18 +7,22 @@ import {
   PrimaryColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Generated,
 } from "typeorm";
 import { User } from "./User";
 import { Item } from "./Item";
 
 @Entity("asset")
 export class Asset {
+  // @Column()
+  // @Generated()
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ name: "asset_qty", nullable: false })
   quantity: number;
 
+  // @PrimaryColumn()
   @ManyToOne(() => User, (user) => user.assets, { nullable: false })
   @JoinColumn({
     name: "user_id",
@@ -27,6 +31,7 @@ export class Asset {
   })
   user: User;
 
+  // @PrimaryColumn()
   @ManyToOne(() => Item, (item) => item.assets, { nullable: false })
   @JoinColumn({
     name: "item_id",

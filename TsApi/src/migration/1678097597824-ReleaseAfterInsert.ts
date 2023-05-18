@@ -28,4 +28,5 @@ export class ReleaseAfterInsert1678097597824 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {}
 }
 
+// typeorm migration:create ./src/migration/ReleaseAfterInsert
 // yarn typeorm migration:run -- -d "src/data-source.ts"
